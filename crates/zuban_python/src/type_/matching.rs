@@ -578,9 +578,12 @@ impl Type {
                     && let Some(replace_self) = matcher.replace_self
                 {
                     let replaced = replace_self();
-                    // We already matched Self
                     if replaced == Type::Self_ {
-                        Match::new_false()
+                        // Self is not remapped, so it is the Self of the current class.
+                        match i_s.current_type() {
+                            Some(t) => self.matches(i_s, matcher, &t, variance),
+                            None => Match::new_false(),
+                        }
                     } else {
                         self.matches(
                             i_s,

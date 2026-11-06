@@ -675,7 +675,7 @@ class Widget:
 
 class TT(Widget):
     def __init__(self) -> None:
-        self.bind(self._on_foo)  # E: Argument 1 to "bind" of "Widget" has incompatible type "Callable[[Widget], None]"; expected "Callable[[Self], object] | None"
+        self.bind(self._on_foo)
 
     def _on_foo(self, junk_event: Widget) -> None: ...
 
@@ -808,3 +808,21 @@ class Thing(Model):
 
 assert_type(Thing.objects, Manager[Thing])
 assert_type(Thing.default_manager, Manager[Thing])
+
+[case self_in_callable_param_with_super_call]
+from typing import Any, Callable, Self
+
+class Base: ...
+
+class Handler:
+    def __init__(self, a: Any, b: Any, server: Base) -> None: ...
+
+class H(Handler): ...
+
+class Server(Base):
+    def __init__(self, handler: Callable[[Any, Any, Self], Handler]) -> None: ...
+
+class Sub(Server):
+    def __init__(self) -> None:
+        super().__init__(H)
+        super().__init__(int)  # E: Argument 1 to "__init__" of "Server" has incompatible type "type[int]"; expected "Callable[[Any, Any, Self], Handler]"
